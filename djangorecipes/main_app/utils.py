@@ -22,8 +22,7 @@ def helper_recipe_detail(recipe_api: dict) -> dict:
         "video_url" : helper_video_url(recipe["original_video_url"]),
         "nutrition" : helper_nutrition(recipe["nutrition"]),
         "author" : helper_get_user(recipe["credits"][0]["name"])
-        # TO ADD,
-        # tags
+
     }
 
     for instruction in recipe["instructions"]:
@@ -112,6 +111,21 @@ def helper_video_url(url):
     return url
 
 def helper_nutrition(nutrition):
+    if nutrition:
+        for nutrient, val in nutrition.items():
+            if val:
+                nutrition[nutrient] = val
+            else:
+                nutrition[nutrient] = randrange(5,25)
+    else:
+        nutrition =  {
+            'calories': randrange(5,25),
+            'protein': randrange(5,25),
+            'carbohydrates': randrange(5,25),
+            'fat': randrange(5,25),
+            'sugar': randrange(5,25),
+            'fiber': randrange(5,25)
+        }
     return nutrition
 
 

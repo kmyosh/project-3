@@ -2,15 +2,17 @@
 <link rel="stylesheet" href="{% static 'style2.css' %}" />
 <div class="all">
   <div class="main">
-    <h2>Delete Book</h2>
-
     <h4>
       Are you sure you want to delete
       <span class="cust-text">{{ object.title }}</span>?
     </h4>
     <form action="" method="POST">
       {% csrf_token %}
-      <input type="submit" value="Yes - Delete!" class="btn" />
+      <input
+        type="submit"
+        value="Yes - Delete!"
+        class="btn waves-effect waves-custom waves-light"
+      />
       <a href="{% url 'meal_plan_detail' object.id %}" class="btn">Cancel</a>
     </form>
   </div>

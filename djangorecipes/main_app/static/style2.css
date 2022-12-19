@@ -343,8 +343,13 @@ h4 > .cust-text {
   display: none;
   color: black;
 }
-.meal-plan-title {
 
+.button-container {
+  margin: 20px;
+}
+
+.card { 
+  height: auto;
 }
 @media only screen and (max-width: 650px) {
   .nutrition-content {
@@ -386,6 +391,9 @@ h4 > .cust-text {
   .brush-underline-long > img {
     width: 160px;
   }
+  .rec-cat {
+    grid-template-columns: 1fr 1fr !important;
+  }
 }
 
 @media only screen and (min-width: 1200px) {
@@ -395,6 +403,7 @@ h4 > .cust-text {
     max-height: 100%;
     object-fit: cover;
   }
+  
   .header-img {
     top: 0px;
     margin: 30px;

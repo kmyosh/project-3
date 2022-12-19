@@ -8,9 +8,8 @@ from .models import MealPlans, Recipes
 from .forms import MealPlanForm, RecipesForm
 from . import tc_api
 from . import utils
+from . import cuisine_tags
 import random
-
-
 
 def home(request):
     p = {
@@ -19,14 +18,15 @@ def home(request):
     }
     response = tc_api.client.get_recipes_list(p)
     data = utils.parse_recipes_list(response)
-    tags = utils.get_tags_by_type("cuisine")
-    cuisine_tags_values = tags
 
     for idx, item in enumerate(data):
         if data[idx]['rating']['score']:
             data[idx]['rating']['score'] = round(data[idx]['rating']['score'] * 100, 0)
         data[idx]['rating']['total_count'] = data[idx]['rating']['count_positive'] + data[idx]['rating']['count_negative']
-    return render(request, 'home.html', {'data': data, 'cuisine_tag_values': cuisine_tags_values})
+    
+    tags = cuisine_tags.tags
+
+    return render(request, 'home.html', {'data': data, 'tags':tags})
 
 def cuisine_recipe_list(request, cuisine="american"):
     search_params = {
@@ -102,8 +102,13 @@ def meal_plan_detail(request, mealplan_id):
         "id":f"{recipe_id}"
         }
         response = tc_api.client.get_recipes_details(p)
-        data = utils.parse_recipes_details(response, "d")
-        recipe_collection.append(data)
+        recipe_data = utils.parse_recipes_details(response, "d")
+        
+        if recipe_data['rating']['score']:
+            recipe_data['rating']['score'] = round(recipe_data['rating']['score'] * 100, 0)
+        recipe_data['rating']['total_count'] = recipe_data['rating']['count_positive'] + recipe_data['rating']['count_negative']
+
+        recipe_collection.append(recipe_data)
     return render(request, 'meal_plans/detail.html', {'meal_plan': meal_plan, 'recipes': recipes, 'recipe_collection': recipe_collection})
 
 # update Meal Plans
@@ -131,13 +136,11 @@ def add_recipe_to_meal_plan(request,recipe_id):
     mealplan_id = request.POST['mealplan']
     mealplan_obj = get_object_or_404(MealPlans, pk=mealplan_id)
     try:
-        #Check if mealplan has this recipe
         recipe = mealplan_obj.recipes.get(recipe_id = recipe_id)
         print("Mealplan already has this recipe.")
     except:
         print("Mealplan does not have this recipe!")
         try:
-            #Check if recipe exists
             recipe = Recipes.objects.get(recipe_id=recipe_id)
         except:
             recipe = Recipes.objects.create(recipe_id=recipe_id)
@@ -207,16 +210,23 @@ def random_recipe(request):
 
 @login_required
 def recipe_index(request):
+    print(request.user)
     recipes = Recipes.objects.all().values()
     recipe_collection = []
-    for idx, item in enumerate(recipes): 
+
+    for idx, recipe_key in enumerate(recipes): 
         recipe_id = recipes[idx]['recipe_id']
         p = {
             "id":f"{recipe_id}"
         }
         response = tc_api.client.get_recipes_details(p)
-        data = utils.parse_recipes_details(response, "s")
-        recipe_collection.append(data)
+        recipe_data = utils.parse_recipes_details(response, "s")
+
+        if recipe_data['rating']['score']:
+            recipe_data['rating']['score'] = round(recipe_data['rating']['score'] * 100, 0)
+        recipe_data['rating']['total_count'] = recipe_data['rating']['count_positive'] + recipe_data['rating']['count_negative']
+        
+        recipe_collection.append(recipe_data)
     return render(request, 'recipes/index.html', {'recipe_collection': recipe_collection})
 
 @login_required
@@ -227,13 +237,12 @@ def add_recipe(request, recipe_id):
     }
     response = tc_api.client.get_recipes_details(p)
     data = utils.parse_recipes_details(response, "d")
-
     return render(request, 'recipes/add.html', {'recipe_id':recipe_id, 'data':data, 'mealplans': mealplans})
 
 @login_required
 def delete_recipe(request, recipe_id):
     Recipes.objects.filter(recipe_id=recipe_id).delete()
-    return redirect("recipe_index")
+    return redirect("recipe_detail", recipe_id=recipe_id)
 
 def recipe_detail(request, recipe_id):
     p = {
